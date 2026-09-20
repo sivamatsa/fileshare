@@ -1,0 +1,6 @@
+{
+  "name": "Direct P2P File Transfer",
+  "description": "Pure peer-to-peer file transfer system for exchanging large files directly between devices using WebRTC DataChannels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

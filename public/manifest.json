@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Direct P2P File Transfer",
+  "short_name": "DirectP2P",
+  "description": "Pure peer-to-peer file transfer system for exchanging large files directly between devices using WebRTC DataChannels.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"]
+}
