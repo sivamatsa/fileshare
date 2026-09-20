@@ -12,6 +12,7 @@ import {
   HardDrive,
   Eye,
   Folder,
+  Trash2,
 } from 'lucide-react';
 import { IncomingTransfer } from '../types';
 import { formatBytes, formatSpeed, formatTime } from '../utils/formatters';
@@ -22,6 +23,7 @@ interface IncomingTransfersProps {
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
   onPreview?: (transfer: IncomingTransfer) => void;
+  onClearFinished?: () => void;
 }
 
 export const IncomingTransfers: React.FC<IncomingTransfersProps> = ({
@@ -29,7 +31,12 @@ export const IncomingTransfers: React.FC<IncomingTransfersProps> = ({
   onAccept,
   onReject,
   onPreview,
+  onClearFinished,
 }) => {
+  const hasFinished = transfers.some(
+    (t) => t.status === 'completed' || t.status === 'cancelled' || t.status === 'error'
+  );
+
   return (
     <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
@@ -42,6 +49,17 @@ export const IncomingTransfers: React.FC<IncomingTransfersProps> = ({
             Files streaming into your browser via WebRTC • Direct disk/memory download
           </p>
         </div>
+
+        {hasFinished && onClearFinished && (
+          <button
+            id="btn-clear-incoming"
+            onClick={onClearFinished}
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 transition cursor-pointer"
+            title="Clear finished downloads"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto max-h-[460px] space-y-3 pr-1">
@@ -156,17 +174,17 @@ export const IncomingTransfers: React.FC<IncomingTransfersProps> = ({
                   </div>
                 )}
 
-                {/* Transfer Progress */}
+                {/* Transfer Progress with tabular-nums */}
                 {isTransferring && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-mono text-emerald-400 font-medium">
+                      <span className="font-mono text-emerald-400 font-bold tabular-nums min-w-[36px]">
                         {item.progress}%
                       </span>
-                      <div className="flex items-center gap-3 text-neutral-400 font-mono text-[11px]">
-                        <span>{formatSpeed(item.speed)}</span>
-                        <span>ETA: {formatTime(item.etaSeconds)}</span>
-                        <span>
+                      <div className="flex items-center gap-3 text-neutral-400 font-mono text-[11px] whitespace-nowrap">
+                        <span className="tabular-nums min-w-[65px] text-right">{formatSpeed(item.speed)}</span>
+                        <span className="tabular-nums min-w-[55px] text-right">ETA: {formatTime(item.etaSeconds)}</span>
+                        <span className="tabular-nums">
                           {formatBytes(item.bytesReceived)} / {formatBytes(item.size)}
                         </span>
                       </div>

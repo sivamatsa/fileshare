@@ -6,7 +6,7 @@ import './index.css';
 // Register PWA service worker
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
       console.debug('Service Worker registration skipped:', err);
     });
   });

@@ -23,6 +23,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [chunkSize, setChunkSize] = useState(settings.chunkSize);
   const [iceMode, setIceMode] = useState<IceMode>(settings.iceMode);
   const [customStunUrl, setCustomStunUrl] = useState(settings.customStunUrl || '');
+  const [customSignalingUrl, setCustomSignalingUrl] = useState(settings.customSignalingUrl || '');
   const [autoAccept, setAutoAccept] = useState(settings.autoAcceptTransfers);
   const [soundAlerts, setSoundAlerts] = useState(settings.enableSoundAlerts);
   const [wakeLock, setWakeLock] = useState(settings.enableWakeLock ?? true);
@@ -40,6 +41,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         chunkSize,
         iceMode,
         customStunUrl,
+        customSignalingUrl: customSignalingUrl.trim() || undefined,
         autoAcceptTransfers: autoAccept,
         enableSoundAlerts: soundAlerts,
         enableWakeLock: wakeLock,
@@ -213,6 +215,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
           )}
+
+          {/* Custom WebSocket Signaling Server (for GitHub Pages / static hosting) */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-1">
+              Signaling Server URL (Optional)
+            </label>
+            <input
+              type="text"
+              value={customSignalingUrl}
+              onChange={(e) => setCustomSignalingUrl(e.target.value)}
+              placeholder="e.g. wss://my-signaling.onrender.com or leave blank for auto"
+              className="w-full px-3 py-2 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 placeholder-neutral-500 font-mono focus:outline-none focus:border-cyan-500"
+            />
+            <p className="text-[10px] text-neutral-400 mt-1">
+              Used to route WebRTC handshakes. Required when deploying on static hosts like GitHub Pages.
+            </p>
+          </div>
 
           {/* Toggles */}
           <div className="space-y-3 pt-2 border-t border-neutral-800">

@@ -48,16 +48,26 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [stats, setStats] = useState<WebRTCStats>({ bytesSent: 0, bytesReceived: 0 });
   const [peerDevice, setPeerDevice] = useState<DeviceInfo | undefined>(undefined);
-  const [settings, setSettings] = useState<TransferSettings>({
-    chunkSize: 256 * 1024, // 256KB High-Performance Turbo
-    iceMode: 'stun',
-    customStunUrl: '',
-    autoAcceptTransfers: true, // Enabled by default as requested
-    enableSoundAlerts: true,
-    enableWakeLock: true,
-    enableVibration: true,
-    autoDownload: true,
-    enableLocalDiscovery: true,
+  const [settings, setSettings] = useState<TransferSettings>(() => {
+    const defaults: TransferSettings = {
+      chunkSize: 256 * 1024, // 256KB High-Performance Turbo
+      iceMode: 'stun',
+      customStunUrl: '',
+      customSignalingUrl: '',
+      autoAcceptTransfers: true, // Enabled by default as requested
+      enableSoundAlerts: true,
+      enableWakeLock: true,
+      enableVibration: true,
+      autoDownload: true,
+      enableLocalDiscovery: true,
+    };
+    try {
+      const saved = localStorage.getItem('p2p_settings');
+      if (saved) {
+        return { ...defaults, ...JSON.parse(saved) };
+      }
+    } catch {}
+    return defaults;
   });
 
   // Modal toggles & Preview Target
@@ -189,6 +199,9 @@ export default function App() {
   const handleUpdateSettings = (newSettings: Partial<TransferSettings>, newDeviceName?: string) => {
     setSettings((prev) => {
       const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem('p2p_settings', JSON.stringify(updated));
+      } catch {}
       p2pRef.current?.updateSettings(updated);
       return updated;
     });
@@ -202,11 +215,24 @@ export default function App() {
       roomCode
     )}`;
     try {
-      await navigator.clipboard.writeText(inviteUrl);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteUrl);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = inviteUrl;
+        el.setAttribute('readonly', '');
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     } catch {
-      // Fallback
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
@@ -315,6 +341,7 @@ export default function App() {
               telemetry={stats.telemetry}
               isConnected={isConnected}
               chunkSize={settings.chunkSize}
+              onUpdateChunkSize={(size) => handleUpdateSettings({ chunkSize: size })}
             />
 
             {/* Main Transfer Workspace Grid */}
@@ -329,6 +356,8 @@ export default function App() {
                   onSendAll={() => p2pRef.current?.startNextTransfer()}
                   onPauseItem={(id) => p2pRef.current?.pauseTransfer(id)}
                   onResumeItem={(id) => p2pRef.current?.resumeTransfer(id)}
+                  onPauseAll={() => p2pRef.current?.pauseAllTransfers()}
+                  onResumeAll={() => p2pRef.current?.resumeAllTransfers()}
                   onCancelItem={(id) => p2pRef.current?.cancelTransfer(id)}
                   onRemoveItem={(id) => p2pRef.current?.removeQueueItem(id)}
                   onClearQueue={() => p2pRef.current?.clearQueue()}
@@ -342,6 +371,7 @@ export default function App() {
                     transfers={incomingTransfers}
                     onAccept={(id) => p2pRef.current?.acceptIncomingTransfer(id)}
                     onReject={(id) => p2pRef.current?.rejectIncomingTransfer(id)}
+                    onClearFinished={() => p2pRef.current?.clearCompletedIncoming()}
                     onPreview={(transfer) => {
                       if (transfer.blobUrl) {
                         setPreviewTarget({

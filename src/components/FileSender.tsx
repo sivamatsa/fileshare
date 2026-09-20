@@ -29,6 +29,8 @@ interface FileSenderProps {
   onSendAll: () => void;
   onPauseItem: (id: string) => void;
   onResumeItem: (id: string) => void;
+  onPauseAll?: () => void;
+  onResumeAll?: () => void;
   onCancelItem: (id: string) => void;
   onRemoveItem: (id: string) => void;
   onClearQueue: () => void;
@@ -42,6 +44,8 @@ export const FileSender: React.FC<FileSenderProps> = ({
   onSendAll,
   onPauseItem,
   onResumeItem,
+  onPauseAll,
+  onResumeAll,
   onCancelItem,
   onRemoveItem,
   onClearQueue,
@@ -110,6 +114,30 @@ export const FileSender: React.FC<FileSenderProps> = ({
 
         {queue.length > 0 && (
           <div className="flex items-center gap-2">
+            {activeItem && activeItem.status === 'transferring' && onPauseAll && (
+              <button
+                id="btn-pause-all"
+                onClick={onPauseAll}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/60 text-amber-300 text-xs font-semibold transition cursor-pointer"
+                title="Pause active transfer"
+              >
+                <Pause className="w-3.5 h-3.5" />
+                <span>Pause</span>
+              </button>
+            )}
+
+            {activeItem && activeItem.status === 'paused' && onResumeAll && (
+              <button
+                id="btn-resume-all"
+                onClick={onResumeAll}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 text-emerald-300 text-xs font-semibold transition cursor-pointer"
+                title="Resume transfer"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Resume</span>
+              </button>
+            )}
+
             {queuedCount > 0 && isPeerConnected && !activeItem && (
               <button
                 id="btn-send-all"
@@ -323,13 +351,13 @@ export const FileSender: React.FC<FileSenderProps> = ({
                 {(isTransferring || isPaused) && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-mono text-cyan-300 font-medium">
+                      <span className="font-mono text-cyan-300 font-bold tabular-nums min-w-[36px]">
                         {item.progress}%
                       </span>
-                      <div className="flex items-center gap-3 text-neutral-400 font-mono text-[11px]">
-                        <span>{formatSpeed(item.speed)}</span>
-                        <span>ETA: {formatTime(item.etaSeconds)}</span>
-                        <span>
+                      <div className="flex items-center gap-3 text-neutral-400 font-mono text-[11px] whitespace-nowrap">
+                        <span className="tabular-nums min-w-[65px] text-right">{formatSpeed(item.speed)}</span>
+                        <span className="tabular-nums min-w-[55px] text-right">ETA: {formatTime(item.etaSeconds)}</span>
+                        <span className="tabular-nums">
                           {formatBytes(item.bytesTransferred)} / {formatBytes(item.size)}
                         </span>
                       </div>

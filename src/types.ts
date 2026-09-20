@@ -117,6 +117,7 @@ export interface TransferSettings {
   chunkSize: number; // bytes, default 262144 (256KB)
   iceMode: IceMode;
   customStunUrl: string;
+  customSignalingUrl?: string; // WebSocket signaling URL (e.g. for GitHub Pages / static deployment)
   autoAcceptTransfers: boolean;
   enableSoundAlerts: boolean;
   enableWakeLock: boolean;

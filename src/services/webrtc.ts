@@ -145,10 +145,26 @@ export class P2PManager {
     }, 2500);
   }
 
+  public getSignalingUrl(): string {
+    if (this.settings.customSignalingUrl && this.settings.customSignalingUrl.trim()) {
+      let custom = this.settings.customSignalingUrl.trim();
+      if (custom.startsWith('http://')) custom = custom.replace('http://', 'ws://');
+      if (custom.startsWith('https://')) custom = custom.replace('https://', 'wss://');
+      return custom;
+    }
+    if (import.meta.env.VITE_SIGNALING_URL) {
+      let envUrl = String(import.meta.env.VITE_SIGNALING_URL).trim();
+      if (envUrl.startsWith('http://')) envUrl = envUrl.replace('http://', 'ws://');
+      if (envUrl.startsWith('https://')) envUrl = envUrl.replace('https://', 'wss://');
+      return envUrl;
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}`;
+  }
+
   private reconnectSignaling() {
     if (this.isExplicitDisconnect || !this.roomCode) return;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
+    const wsUrl = this.getSignalingUrl();
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -188,8 +204,7 @@ export class P2PManager {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
+    const wsUrl = this.getSignalingUrl();
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -244,8 +259,7 @@ export class P2PManager {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
+    const wsUrl = this.getSignalingUrl();
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -993,6 +1007,28 @@ export class P2PManager {
   public clearQueue() {
     this.fileQueue = this.fileQueue.filter((item) => item.status === 'transferring');
     this.onQueueChange?.([...this.fileQueue]);
+  }
+
+  public pauseAllTransfers() {
+    if (this.activeSendId) {
+      this.pauseTransfer(this.activeSendId);
+    }
+  }
+
+  public resumeAllTransfers() {
+    const pausedItem = this.fileQueue.find((i) => i.status === 'paused');
+    if (pausedItem) {
+      this.resumeTransfer(pausedItem.id);
+    }
+  }
+
+  public clearCompletedIncoming() {
+    for (const [id, item] of this.incomingTransfers.entries()) {
+      if (item.status === 'completed' || item.status === 'cancelled' || item.status === 'error') {
+        this.incomingTransfers.delete(id);
+      }
+    }
+    this.onIncomingChange?.(Array.from(this.incomingTransfers.values()));
   }
 
   public async startNextTransfer() {
